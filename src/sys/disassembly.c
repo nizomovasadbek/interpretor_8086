@@ -2,6 +2,7 @@
 #include "../lib/instruction.h"
 #include "../lib/memory.h"
 #include "../lib/cpu.h"
+#include "../lib/interrupt.h"
 
 #include <stdio.h>
 #include <stdint.h>
@@ -16,6 +17,14 @@ IST table[] = {
     { ACCUMUL_TO_MEM, 7, MOV, 3, .config = WORD | DATA_WORD }, // -
     { MEM_TO_SEGREG, 8, MOV, 2, .config = CONTROLLER }, // -
     { SEGREG_TO_MEM, 8, MOV, 2, .config = CONTROLLER }, // -
+    { PUSH_SREG, 8, PUSH, 1, .config = 0 },
+
+    // PUSH
+    { PUSH_REG_MEM, 8, PUSH, .config = CONTROLLER | WORD }, // -
+    { PUSH_REG, 5, PUSH, .config = REGISTER }, // -
+
+    
+    { INT_TYPESPEC, 8, INT, .config = DATA_WORD }, // -
 };
 
 #define TABLE_SIZE sizeof(table) / sizeof(IST)
@@ -179,6 +188,31 @@ void execute(uint8_t* memory, CPU* cpu) {
 
                 break;
 
+            case INT_TYPESPEC:
+
+                cpu_irq(data[0]);
+                break;
+
+            case PUSH_REG:
+                mod = 3;
+                ea = memory[cpu->ip] & 0x07;
+
+            case PUSH_REG_MEM:
+
+                push(cpu, memory, mod, ea);
+
+                break;
+
+            case PUSH_SREG:
+
+                reg = (memory[cpu->ip] & 0x18) >> 3;
+                memory[physicalToLogical(cpu->segments[SS], cpu->_16bits[SP] - 1)] = (cpu->segments[reg] & 0xFF00) >> 8;
+                memory[physicalToLogical(cpu->segments[SS], cpu->_16bits[SP] - 2)] = (cpu->segments[reg] & 0x00FF);
+
+                cpu->_16bits[SP] -= 2;
+
+                break;
+
             default:
                 delta = 1;
                 break;
@@ -197,5 +231,9 @@ void execute(uint8_t* memory, CPU* cpu) {
              cpu->_16bits[CX],
              cpu->_16bits[DX], cpu->_16bits[DI], cpu->_16bits[SI], cpu->_16bits[BP], cpu->_16bits[SP]);
     }
+
+    for(int i = 0; i < 3; i++)
+            printf("[%X]=%X, ", cpu->_16bits[SP] + i, memory[physicalToLogical(cpu->segments[SS], cpu->_16bits[SP] + i)]);
+        printf("\n");
 
 }

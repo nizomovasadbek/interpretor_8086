@@ -5,6 +5,7 @@
 
 typedef enum {
 
+    // MOV
     MOV_REG_TO_REG=         0b10001000, // move to register/memory from register.
     IMDT_REG_TO_MEM=        0b11000110, // immidiate to register/memory
     IMDT_REG =              0b10110000, // immidiate to register
@@ -13,11 +14,20 @@ typedef enum {
     MEM_TO_SEGREG =         0b10001110, // memory/register to segment register
     SEGREG_TO_MEM =         0b10001100, // segment register to memory/register
 
+    // PUSH
+    PUSH_REG_MEM =          0b11111111, // Push register/memory
+    PUSH_REG =              0b01010000, // Push register
+    PUSH_SREG =             0b00000110, // Push segment register
+
+    // INT
+    INT_TYPESPEC =          0b11001101, // Type specified
+
 } Instruction;
 
 typedef enum {
     MOV,
-    
+    INT,
+    PUSH,
 
     NONE
 } Type;

@@ -37,10 +37,18 @@ void mov_immidiate(CPU* cpu, uint8_t mod, uint16_t ea, uint8_t suffix, uint8_t* 
 }
 
 void mov_segment(CPU* cpu, uint8_t mod, uint8_t sreg, uint16_t ea, uint8_t suffix, uint8_t* memory) {
-    if(suffix & DISP) {
-        cpu->segments[sreg] = memory[physicalToLogical(cpu->segments[DS], ea)];
+    if(mod == 3) {
+        if(!(suffix & DISP)) {
+            cpu->segments[sreg] = cpu->_16bits[ea];
+        } else {
+            cpu->_16bits[ea] = cpu->segments[sreg];
+        }
     } else {
-        memory[physicalToLogical(cpu->segments[DS], ea)] = cpu->segments[sreg];
+        if(!(suffix & DISP)) {
+        cpu->segments[sreg] = memory[physicalToLogical(cpu->segments[DS], ea)];
+        } else {
+            memory[physicalToLogical(cpu->segments[DS], ea)] = cpu->segments[sreg];
+        }
     }
 }
 
@@ -50,9 +58,21 @@ CPU cpu_init(void) {
 
     memset(&cpu, 0, sizeof(CPU));
     cpu._16bits[SP] = 0xFFFF;
-    cpu._16bits[BP] = cpu._16bits[SP];
 
     return cpu;
+}
+
+void push(CPU* cpu, uint8_t* memory, uint8_t mod, uint16_t ea) {
+    uint8_t high, low;
+    if(mod == 3) {
+        splitWord(cpu->_16bits[ea], &high, &low);
+        memory[physicalToLogical(cpu->segments[SS], cpu->_16bits[SP] - 1)] = high;
+        memory[physicalToLogical(cpu->segments[SS], cpu->_16bits[SP] - 2)] = low;
+    } else {
+        memory[physicalToLogical(cpu->segments[SS], cpu->_16bits[SP] - 2)] = memory[physicalToLogical(cpu->segments[DS], ea)];
+        memory[physicalToLogical(cpu->segments[SS], cpu->_16bits[SP] - 1)] = memory[physicalToLogical(cpu->segments[DS], ea + 1)];
+    }
+    cpu->_16bits[SP] -= 2;
 }
 
 void setValue(CPU* cpu, uint8_t reg, uint16_t value, bool w) {
