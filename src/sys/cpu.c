@@ -76,7 +76,6 @@ void push(CPU* cpu, uint8_t* memory, uint8_t mod, uint16_t ea) {
 }
 
 void pop(CPU* cpu, uint8_t* memory, uint8_t mod, uint16_t ea) {
-    uint8_t high, low;
     if(mod == 3) {
         setValue(cpu, ea, combineBytes(memory[physicalToLogical(cpu->segments[SS], cpu->_16bits[SP] + 1)], 
             memory[physicalToLogical(cpu->segments[SS], cpu->_16bits[SP])]), true);
@@ -111,6 +110,49 @@ void xchg(CPU* cpu, uint8_t* memory, uint8_t reg, uint8_t mod, uint8_t ea, uint8
             temp = cpu->_8bits[reg];
             setValue(cpu, reg, memory[physicalToLogical(cpu->segments[DS], ea)], false);
             memory[physicalToLogical(cpu->segments[DS], ea)] = temp;
+        }
+    }
+}
+
+void add(CPU* cpu, uint8_t* memory, uint8_t reg, uint8_t mod, uint8_t ea, uint8_t suffix, uint8_t carry) {
+    uint8_t c = carry?!!(cpu->flags & (1 << CF)):0;
+    uint32_t sum = c + (suffix&WORD ? cpu->_16bits[reg] : cpu->_8bits[reg]) + memory[physicalToLogical(cpu->segments[DS], ea + (suffix & WORD))];
+    if(sum > 0xFFFF) {
+        cpu->flags |= 1 << CF;
+    }
+    if(mod == 3) { // ea as register
+        if(suffix & DISP) { // "to" reg
+            setValue(cpu, reg, c + ((suffix & WORD)?(cpu->_16bits[reg] + cpu->_16bits[ea]):(cpu->_8bits[reg]+cpu->_8bits[ea])), suffix & WORD);
+        } else {
+            setValue(cpu, ea, c + ((suffix & WORD)?(cpu->_16bits[reg] + cpu->_16bits[ea]):(cpu->_8bits[reg] + cpu->_8bits[ea])), suffix & WORD);
+        }
+    } else {
+        if(suffix & DISP) {
+            setValue(cpu, reg, c + (suffix&WORD?cpu->_16bits[reg]:cpu->_8bits[reg]) + combineBytes(memory[physicalToLogical(cpu->segments[DS], ea+1)], 
+                memory[physicalToLogical(cpu->segments[DS], ea)]), suffix & WORD);
+        } else {
+            memory[physicalToLogical(cpu->segments[DS], ea)] += c + (suffix&WORD?cpu->_16bits[reg]:cpu->_8bits[reg]) & 0x00FF;
+            if(suffix & WORD)
+                memory[physicalToLogical(cpu->segments[DS], ea + 1)] += (cpu->_16bits[reg] & 0xFF00) >> 8;
+        }
+    }
+}
+
+void add_immidiate(CPU* cpu, uint8_t* memory, uint8_t mod, uint8_t ea, uint8_t suffix, uint8_t* data, uint8_t carry) {
+    uint8_t c = carry?!!(cpu->flags & (1 << CF)):0;
+    uint16_t r = combineBytes(data[1], data[0]);
+    if(mod == 3) {
+        if(suffix & WORD) {
+            setValue(cpu, ea, c + cpu->_16bits[ea] + (suffix&DISP?(int16_t)r:r), true);
+        } else {
+            setValue(cpu, ea, c + cpu->_8bits[ea] + (suffix&DISP?(int8_t)r:r), false);
+        }
+    } else {
+        memory[physicalToLogical(cpu->segments[DS], ea)] += c + (suffix&DISP?(int8_t)r:r);
+        if(c + (suffix&DISP?(int8_t)r:r) > 0xFF)
+            r += 0x0100;
+        if(suffix & WORD) {
+            memory[physicalToLogical(cpu->segments[DS], ea + 1)] += (suffix&DISP?(int8_t)(r & 0xFF00) >> 8:(r & 0xFF00) >> 8);
         }
     }
 }

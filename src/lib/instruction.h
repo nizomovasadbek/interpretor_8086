@@ -19,12 +19,24 @@ typedef enum {
     PUSH_REG =              0b01010000, // Push register
     PUSH_SREG =             0b00000110, // Push segment register
 
+    // POP
     POP_REG_MEM =           0b10001111, // pop register/memory
     POP_REG =               0b01011000, // pop register
     POP_SREG =              0b00000111, // pop segment register
 
+    // XCHG
     XCHG_REGMEM_REG =       0b10000110, // exchange register/memory with register
     XCHG_REG_ACCUMUL =      0b10010000, // Exchange with accumulator
+
+    // ADD
+    ADD_REGMEM_TO_REG =     0b00000000, // Add Register/memory with register either
+    ADD_IMDT_REGMEM =       0b10000000, // Add immidiate to register/memory
+    ADD_IMDT_ACCUMUL =      0b00000100, // Add immidiate to accumulator
+
+    //ADC
+    ADC_REGMEM_REG =        0b00010000, // Add register/memory with register either carry
+    ADC_IMDT_REGMEM =       0b10000000, // Add immidiate to register/memory carry
+    ADC_IMDT_ACCUMUL =      0b00010100, // Add immidiate to accumulator carry
 
     // INT
     INT_TYPESPEC =          0b11001101, // Type specified
@@ -37,6 +49,8 @@ typedef enum {
     PUSH,
     POP,
     XCHG,
+    ADD,
+    ADC,
 
     NONE
 } Type;

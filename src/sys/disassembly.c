@@ -19,21 +19,31 @@ IST table[] = {
     { SEGREG_TO_MEM, 8, MOV, 2, .config = CONTROLLER }, // -
 
     // PUSH
-    { PUSH_REG_MEM, 8, PUSH, .config = CONTROLLER | WORD }, // -
-    { PUSH_REG, 5, PUSH, .config = REGISTER }, // -
+    { PUSH_REG_MEM, 8, PUSH, 2, .config = CONTROLLER | WORD }, // -
+    { PUSH_REG, 5, PUSH, 1, .config = REGISTER }, // -
     { PUSH_SREG, 8, PUSH, 1, .config = 0 }, // -
 
     // POP
-    { POP_REG_MEM, 8, POP, .config = CONTROLLER }, // -
-    { POP_REG, 5, POP, .config = REGISTER }, // -
-    { POP_SREG, 8, POP, .config = 0 }, // -
+    { POP_REG_MEM, 8, POP, 2, .config = CONTROLLER }, // -
+    { POP_REG, 5, POP, 1, .config = REGISTER }, // -
+    { POP_SREG, 8, POP, 1, .config = 0 }, // -
 
     //XCHG
-    { XCHG_REGMEM_REG, 7, XCHG, .config = CONTROLLER }, // -
-    { XCHG_REG_ACCUMUL, 5, XCHG, .config = 0 },
+    { XCHG_REGMEM_REG, 7, XCHG, 2, .config = CONTROLLER }, // -
+    { XCHG_REG_ACCUMUL, 5, XCHG, 1, .config = 0 }, //
+
+    // ADD
+    { ADD_REGMEM_TO_REG, 6, ADD, 2, .config = CONTROLLER | WORD | DISP }, // -
+    { ADD_IMDT_REGMEM, 6, ADD, 3, .config = CONTROLLER | WORD | DISP | DATA_WORD }, // -
+    { ADD_IMDT_ACCUMUL, 7, ADD, 2, .config = DATA_WORD | WORD }, // -
+
+    //ADC
+    { ADC_REGMEM_REG, 6, ADC, 2, .config = CONTROLLER | WORD | DISP }, // -
+    { ADC_IMDT_REGMEM, 6, ADC, 3, .config = CONTROLLER | WORD | DISP | DATA_WORD }, // -
+    { ADC_IMDT_ACCUMUL, 7, ADC, 2, .config = DATA_WORD | WORD }, //
 
     
-    { INT_TYPESPEC, 8, INT, .config = DATA_WORD }, // -
+    { INT_TYPESPEC, 8, INT, 2, .config = DATA_WORD }, // -
 };
 
 #define TABLE_SIZE sizeof(table) / sizeof(IST)
@@ -255,6 +265,25 @@ void execute(uint8_t* memory, CPU* cpu) {
             case XCHG_REGMEM_REG:
 
                 xchg(cpu, memory, reg, mod, ea, suffix);
+
+                break;
+
+            case ADC_REGMEM_REG:
+            case ADD_REGMEM_TO_REG:
+
+                add(cpu, memory, reg, mod, ea, suffix, ist.ins == ADC_REGMEM_REG);
+
+                break;
+
+            case ADC_IMDT_ACCUMUL:
+                reg = 2;
+            case ADD_IMDT_ACCUMUL:
+                mod = 3;
+                ea = 0;
+
+            case ADD_IMDT_REGMEM:
+
+                add_immidiate(cpu, memory, mod, ea, suffix, data, reg == 2);
 
                 break;
 

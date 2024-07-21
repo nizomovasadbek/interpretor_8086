@@ -45,15 +45,15 @@ typedef struct {
 
 
 // Flags
-#define CF 0x00
-#define PF 0x02
-#define AF 0x08
-#define ZF 0x20
-#define SF 0x40
-#define TF 0x80
-#define IF 0x100
-#define DF 0x200
-#define OF 0x400
+#define CF 0
+#define PF 2
+#define AF 4
+#define ZF 6
+#define SF 7
+#define TF 8
+#define IF 9
+#define DF 10
+#define OF 11
 
 #define _16BIT 0x01
 #define _8BIT  0x02
@@ -74,5 +74,7 @@ void mov_segment(CPU* cpu, uint8_t mod, uint8_t sreg, uint16_t ea, uint8_t suffi
 void push(CPU* cpu, uint8_t* memory, uint8_t mod, uint16_t ea);
 void pop(CPU* cpu, uint8_t* memory, uint8_t mod, uint16_t ea);
 void xchg(CPU* cpu, uint8_t* memory, uint8_t reg, uint8_t mod, uint8_t ea, uint8_t suffix);
+void add(CPU* cpu, uint8_t* memory, uint8_t reg, uint8_t mod, uint8_t ea, uint8_t suffix, uint8_t carry);
+void add_immidiate(CPU* cpu, uint8_t* memory, uint8_t mod, uint8_t ea, uint8_t suffix, uint8_t* data, uint8_t carry);
 
 #endif
