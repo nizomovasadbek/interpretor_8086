@@ -41,7 +41,7 @@ void mov_segment(CPU* cpu, uint8_t mod, uint8_t sreg, uint16_t ea, uint8_t suffi
         if(!(suffix & DISP)) {
             cpu->segments[sreg] = cpu->_16bits[ea];
         } else {
-            cpu->_16bits[ea] = cpu->segments[sreg];
+            setValue(cpu, ea, cpu->segments[sreg], true);
         }
     } else {
         if(!(suffix & DISP)) {
@@ -78,14 +78,41 @@ void push(CPU* cpu, uint8_t* memory, uint8_t mod, uint16_t ea) {
 void pop(CPU* cpu, uint8_t* memory, uint8_t mod, uint16_t ea) {
     uint8_t high, low;
     if(mod == 3) {
-        cpu->_16bits[ea] = combineBytes(memory[physicalToLogical(cpu->segments[SS], cpu->_16bits[SP] + 1)], 
-            memory[physicalToLogical(cpu->segments[SS], cpu->_16bits[SP])]);
+        setValue(cpu, ea, combineBytes(memory[physicalToLogical(cpu->segments[SS], cpu->_16bits[SP] + 1)], 
+            memory[physicalToLogical(cpu->segments[SS], cpu->_16bits[SP])]), true);
     } else {
         memory[physicalToLogical(cpu->segments[DS], ea)] = memory[physicalToLogical(cpu->segments[SS], cpu->_16bits[SP])];
         memory[physicalToLogical(cpu->segments[DS], ea + 1)] = memory[physicalToLogical(cpu->segments[SS], cpu->_16bits[SP] + 1)];
     }
 
     cpu->_16bits[SP] += 2;
+}
+
+void xchg(CPU* cpu, uint8_t* memory, uint8_t reg, uint8_t mod, uint8_t ea, uint8_t suffix) {
+    uint16_t temp;
+    if(mod == 3) {
+        if(suffix & WORD) {
+            temp = cpu->_16bits[reg];
+            setValue(cpu, reg, cpu->_16bits[ea], true);
+            setValue(cpu, ea, temp, true);
+        } else {
+            temp = cpu->_8bits[reg];
+            setValue(cpu, reg, cpu->_8bits[ea], false);
+            setValue(cpu, ea, temp, false);
+        }
+    } else {
+        if(suffix & WORD) {
+            temp = cpu->_16bits[reg];
+            setValue(cpu, reg, combineBytes(memory[physicalToLogical(cpu->segments[DS], ea+1)], 
+                memory[physicalToLogical(cpu->segments[DS], ea)]), true);
+            memory[physicalToLogical(cpu->segments[DS], ea)] = temp & 0x00FF;
+            memory[physicalToLogical(cpu->segments[DS], ea + 1)] = (temp & 0xFF00) >> 8;
+        } else {
+            temp = cpu->_8bits[reg];
+            setValue(cpu, reg, memory[physicalToLogical(cpu->segments[DS], ea)], false);
+            memory[physicalToLogical(cpu->segments[DS], ea)] = temp;
+        }
+    }
 }
 
 void setValue(CPU* cpu, uint8_t reg, uint16_t value, bool w) {

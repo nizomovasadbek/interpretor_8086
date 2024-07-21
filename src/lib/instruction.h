@@ -23,6 +23,9 @@ typedef enum {
     POP_REG =               0b01011000, // pop register
     POP_SREG =              0b00000111, // pop segment register
 
+    XCHG_REGMEM_REG =       0b10000110, // exchange register/memory with register
+    XCHG_REG_ACCUMUL =      0b10010000, // Exchange with accumulator
+
     // INT
     INT_TYPESPEC =          0b11001101, // Type specified
 
@@ -33,6 +36,7 @@ typedef enum {
     INT,
     PUSH,
     POP,
+    XCHG,
 
     NONE
 } Type;

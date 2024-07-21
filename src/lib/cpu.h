@@ -73,5 +73,6 @@ void mov_segment(CPU* cpu, uint8_t mod, uint8_t sreg, uint16_t ea, uint8_t suffi
 
 void push(CPU* cpu, uint8_t* memory, uint8_t mod, uint16_t ea);
 void pop(CPU* cpu, uint8_t* memory, uint8_t mod, uint16_t ea);
+void xchg(CPU* cpu, uint8_t* memory, uint8_t reg, uint8_t mod, uint8_t ea, uint8_t suffix);
 
 #endif

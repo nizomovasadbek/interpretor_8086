@@ -26,7 +26,11 @@ IST table[] = {
     // POP
     { POP_REG_MEM, 8, POP, .config = CONTROLLER }, // -
     { POP_REG, 5, POP, .config = REGISTER }, // -
-    { POP_SREG, 8, POP, .config = 0 }, //
+    { POP_SREG, 8, POP, .config = 0 }, // -
+
+    //XCHG
+    { XCHG_REGMEM_REG, 7, XCHG, .config = CONTROLLER }, // -
+    { XCHG_REG_ACCUMUL, 5, XCHG, .config = 0 },
 
     
     { INT_TYPESPEC, 8, INT, .config = DATA_WORD }, // -
@@ -235,6 +239,22 @@ void execute(uint8_t* memory, CPU* cpu) {
             case POP_REG_MEM:
 
                 pop(cpu, memory, mod, ea);
+
+                break;
+
+            case XCHG_REG_ACCUMUL:
+
+                mod = 3;
+                reg = memory[cpu->ip] & 0x07;
+                suffix |= WORD;
+                ea = 0;
+                /*
+                    Since if mod == 3 then ea treated as register ea=0 represents ax (Accumulator) register
+                */
+
+            case XCHG_REGMEM_REG:
+
+                xchg(cpu, memory, reg, mod, ea, suffix);
 
                 break;
 
