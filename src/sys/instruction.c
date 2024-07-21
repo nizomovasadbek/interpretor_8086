@@ -6,7 +6,7 @@ IST identify(uint8_t ins, IST table[], uint32_t table_size) {
     for(uint8_t i = 0; i < table_size; i++) {
         identity = ins;
         mask = (2 << (table[i].len - 1)) - 1;
-        if(table[i].ins == PUSH_SREG) {
+        if(table[i].ins == PUSH_SREG || table[i].ins == POP_REG) {
             mask &= 0xE7;
         }
         mask <<= 8-table[i].len;

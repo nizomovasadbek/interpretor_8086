@@ -72,5 +72,6 @@ void mov_immidiate(CPU* cpu, uint8_t mod, uint16_t ea, uint8_t suffix, uint8_t* 
 void mov_segment(CPU* cpu, uint8_t mod, uint8_t sreg, uint16_t ea, uint8_t suffix, uint8_t* memory);
 
 void push(CPU* cpu, uint8_t* memory, uint8_t mod, uint16_t ea);
+void pop(CPU* cpu, uint8_t* memory, uint8_t mod, uint16_t ea);
 
 #endif

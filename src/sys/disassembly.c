@@ -17,11 +17,16 @@ IST table[] = {
     { ACCUMUL_TO_MEM, 7, MOV, 3, .config = WORD | DATA_WORD }, // -
     { MEM_TO_SEGREG, 8, MOV, 2, .config = CONTROLLER }, // -
     { SEGREG_TO_MEM, 8, MOV, 2, .config = CONTROLLER }, // -
-    { PUSH_SREG, 8, PUSH, 1, .config = 0 },
 
     // PUSH
     { PUSH_REG_MEM, 8, PUSH, .config = CONTROLLER | WORD }, // -
     { PUSH_REG, 5, PUSH, .config = REGISTER }, // -
+    { PUSH_SREG, 8, PUSH, 1, .config = 0 }, // -
+
+    // POP
+    { POP_REG_MEM, 8, POP, .config = CONTROLLER }, // -
+    { POP_REG, 5, POP, .config = REGISTER }, // -
+    { POP_SREG, 8, POP, .config = 0 }, //
 
     
     { INT_TYPESPEC, 8, INT, .config = DATA_WORD }, // -
@@ -210,6 +215,26 @@ void execute(uint8_t* memory, CPU* cpu) {
                 memory[physicalToLogical(cpu->segments[SS], cpu->_16bits[SP] - 2)] = (cpu->segments[reg] & 0x00FF);
 
                 cpu->_16bits[SP] -= 2;
+
+                break;
+
+            case POP_SREG:
+
+                reg = (memory[cpu->ip] & 0x18) >> 3;
+                cpu->segments[reg] = combineBytes(memory[physicalToLogical(cpu->segments[SS], cpu->_16bits[SP] + 1)], 
+                    memory[physicalToLogical(cpu->segments[SS], cpu->_16bits[SP])]);
+
+                cpu->_16bits[SP] += 2;
+
+                break;
+
+            case POP_REG:
+                mod = 3;
+                ea = memory[cpu->ip] & 0x07;
+
+            case POP_REG_MEM:
+
+                pop(cpu, memory, mod, ea);
 
                 break;
 

@@ -75,6 +75,19 @@ void push(CPU* cpu, uint8_t* memory, uint8_t mod, uint16_t ea) {
     cpu->_16bits[SP] -= 2;
 }
 
+void pop(CPU* cpu, uint8_t* memory, uint8_t mod, uint16_t ea) {
+    uint8_t high, low;
+    if(mod == 3) {
+        cpu->_16bits[ea] = combineBytes(memory[physicalToLogical(cpu->segments[SS], cpu->_16bits[SP] + 1)], 
+            memory[physicalToLogical(cpu->segments[SS], cpu->_16bits[SP])]);
+    } else {
+        memory[physicalToLogical(cpu->segments[DS], ea)] = memory[physicalToLogical(cpu->segments[SS], cpu->_16bits[SP])];
+        memory[physicalToLogical(cpu->segments[DS], ea + 1)] = memory[physicalToLogical(cpu->segments[SS], cpu->_16bits[SP] + 1)];
+    }
+
+    cpu->_16bits[SP] += 2;
+}
+
 void setValue(CPU* cpu, uint8_t reg, uint16_t value, bool w) {
     if(w) {
         cpu->_16bits[reg] = value;

@@ -19,6 +19,10 @@ typedef enum {
     PUSH_REG =              0b01010000, // Push register
     PUSH_SREG =             0b00000110, // Push segment register
 
+    POP_REG_MEM =           0b10001111, // pop register/memory
+    POP_REG =               0b01011000, // pop register
+    POP_SREG =              0b00000111, // pop segment register
+
     // INT
     INT_TYPESPEC =          0b11001101, // Type specified
 
@@ -28,6 +32,7 @@ typedef enum {
     MOV,
     INT,
     PUSH,
+    POP,
 
     NONE
 } Type;
