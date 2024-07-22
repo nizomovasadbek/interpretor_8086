@@ -49,7 +49,12 @@ IST table[] = {
     //SUB
     { SUB_REGMEM_TO_REG, 6, SUB, 2, .config = DISP | WORD | CONTROLLER | REGISTER }, // -
     { SUB_IMDT_REGMEM, 6, SUB, 3, .config = DISP | WORD | CONTROLLER | DATA_WORD }, // -
-    { SUB_IMDT_ACCUMUL, 7, SUB, 2, .config = WORD | DATA_WORD }, //
+    { SUB_IMDT_ACCUMUL, 7, SUB, 2, .config = WORD | DATA_WORD }, // -
+
+    // SSB
+    { SSB_REGMEM_TO_REG, 6, SSB, 2, .config = CONTROLLER | DISP | WORD }, // -
+    { SSB_IMDT_REGMEM, 6, SSB, 3, .config = DISP | WORD | CONTROLLER | DATA_WORD }, // -
+    { SSB_IMDT_ACCUMUL, 7, SSB, 2, .config = WORD | DATA_WORD }, //
 
     
     { INT_TYPESPEC, 8, INT, 2, .config = DATA_WORD }, // -
@@ -324,6 +329,19 @@ void execute(uint8_t* memory, CPU* cpu) {
             case SUB_IMDT_ACCUMUL:
 
                 sub_immidiate(cpu, memory, 3, 0, suffix, data, false);
+
+                break;
+
+            case SSB_REGMEM_TO_REG:
+
+                sub(cpu, memory, reg, mod, ea, suffix, true);
+                suffix = 0;
+
+                break;
+
+            case SSB_IMDT_ACCUMUL:
+
+                sub_immidiate(cpu, memory, mod, ea, suffix, data, true);
 
                 break;
 

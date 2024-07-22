@@ -237,8 +237,8 @@ void setValue(CPU* cpu, uint8_t reg, uint16_t value, bool w) {
     if(w) {
         cpu->_16bits[reg] = value;
         if(reg <= BX) {
-            cpu->_8bits[reg] = (uint8_t) (value & 0x0F);
-            cpu->_8bits[reg + 4] = (uint8_t) ((value & 0xF0) >> 8);
+            cpu->_8bits[reg] = (uint8_t) (value & 0xFF);
+            cpu->_8bits[reg + 4] = (uint8_t) ((value & 0xFF00) >> 8);
         }
     } else {
         uint16_t total = 0;
@@ -246,13 +246,13 @@ void setValue(CPU* cpu, uint8_t reg, uint16_t value, bool w) {
         if(reg > BL) {
             total = value;
             total <<= 8;
-            total |= (cpu->_16bits[reg-4] & 0x00FF);
+            total |= (uint8_t) (cpu->_16bits[reg-4] & 0x00FF);
         } else {
-            total = (cpu->_16bits[reg-4] & 0xFF00);
+            total = (cpu->_16bits[reg] & 0xFF00);
             total |= (uint8_t) value;
         }
-
-        cpu->_16bits[reg-4] = total;
+        if(reg > BL) reg -= 4;
+        cpu->_16bits[reg] = total;
     }
 }
 

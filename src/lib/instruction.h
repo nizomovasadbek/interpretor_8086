@@ -42,9 +42,15 @@ typedef enum {
     INC_REGMEM =            0b11111110, // Increment register/memory
     INC_REG =               0b01000000, // Increment register.
 
+    //SUB
     SUB_REGMEM_TO_REG =     0b00101000, // Sub register/memory with register either
     SUB_IMDT_REGMEM =       0b10000000, // Sub immidiate from register/memory
     SUB_IMDT_ACCUMUL =      0b00101100, // Sub immidiate from accumulator
+
+    //SSB
+    SSB_REGMEM_TO_REG =     0b00011000, // Sub register/memory with register either with borrow
+    SSB_IMDT_REGMEM =       0b10000000, // Sub immidiate from register/memory with borrow
+    SSB_IMDT_ACCUMUL =      0b00011100, // Sub immidiate from accumulator with borrow
 
     // INT
     INT_TYPESPEC =          0b11001101, // Type specified
@@ -61,7 +67,7 @@ typedef enum {
     ADC,
     INC,
     SUB,
-    SBB,
+    SSB,
     DEC,
 
     NONE
