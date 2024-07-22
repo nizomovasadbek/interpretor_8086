@@ -54,7 +54,10 @@ IST table[] = {
     // SSB
     { SSB_REGMEM_TO_REG, 6, SSB, 2, .config = CONTROLLER | DISP | WORD }, // -
     { SSB_IMDT_REGMEM, 6, SSB, 3, .config = DISP | WORD | CONTROLLER | DATA_WORD }, // -
-    { SSB_IMDT_ACCUMUL, 7, SSB, 2, .config = WORD | DATA_WORD }, //
+    { SSB_IMDT_ACCUMUL, 7, SSB, 2, .config = WORD | DATA_WORD }, // -
+
+    // DEC
+    { DEC_REG, 5, DEC, .config = REGISTER }, // -
 
     
     { INT_TYPESPEC, 8, INT, 2, .config = DATA_WORD }, // -
@@ -311,10 +314,15 @@ void execute(uint8_t* memory, CPU* cpu) {
                 mod = 3;
                 suffix |= WORD;
                 ea = memory[cpu->ip] & 0x07;
+                inc(cpu, memory, mod, ea, suffix, 1);
+                break;
 
             case INC_REGMEM:
 
-                inc(cpu, memory, mod, ea, suffix, 1); // can be used as decrement with passing direction -1
+                if(reg == 1) {
+                    inc(cpu, memory, mod, ea, suffix, -1);
+                } else
+                    inc(cpu, memory, mod, ea, suffix, 1); // can be used as decrement with passing direction -1
                 suffix = 0;
 
                 break;
@@ -342,6 +350,13 @@ void execute(uint8_t* memory, CPU* cpu) {
             case SSB_IMDT_ACCUMUL:
 
                 sub_immidiate(cpu, memory, mod, ea, suffix, data, true);
+
+                break;
+
+            case DEC_REG:
+
+                reg = memory[cpu->ip] & 0x07;
+                inc(cpu, memory, 3, reg, WORD, -1);
 
                 break;
 

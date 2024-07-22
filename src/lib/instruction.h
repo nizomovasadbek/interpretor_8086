@@ -52,6 +52,9 @@ typedef enum {
     SSB_IMDT_REGMEM =       0b10000000, // Sub immidiate from register/memory with borrow
     SSB_IMDT_ACCUMUL =      0b00011100, // Sub immidiate from accumulator with borrow
 
+    // DEC
+    DEC_REG =               0b01001000, // Decrement register
+
     // INT
     INT_TYPESPEC =          0b11001101, // Type specified
 
