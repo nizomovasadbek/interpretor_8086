@@ -40,7 +40,16 @@ IST table[] = {
     //ADC
     { ADC_REGMEM_REG, 6, ADC, 2, .config = CONTROLLER | WORD | DISP }, // -
     { ADC_IMDT_REGMEM, 6, ADC, 3, .config = CONTROLLER | WORD | DISP | DATA_WORD }, // -
-    { ADC_IMDT_ACCUMUL, 7, ADC, 2, .config = DATA_WORD | WORD }, //
+    { ADC_IMDT_ACCUMUL, 7, ADC, 2, .config = DATA_WORD | WORD }, // -
+
+    //INC
+    { INC_REGMEM, 7, INC, 2, .config = WORD | CONTROLLER }, // -
+    { INC_REG, 5, INC, 1, .config = REGISTER }, // -
+
+    //SUB
+    { SUB_REGMEM_TO_REG, 6, SUB, 2, .config = DISP | WORD | CONTROLLER | REGISTER }, // -
+    { SUB_IMDT_REGMEM, 6, SUB, 3, .config = DISP | WORD | CONTROLLER | DATA_WORD }, // -
+    { SUB_IMDT_ACCUMUL, 7, SUB, 2, .config = WORD | DATA_WORD }, //
 
     
     { INT_TYPESPEC, 8, INT, 2, .config = DATA_WORD }, // -
@@ -272,6 +281,7 @@ void execute(uint8_t* memory, CPU* cpu) {
             case ADD_REGMEM_TO_REG:
 
                 add(cpu, memory, reg, mod, ea, suffix, ist.ins == ADC_REGMEM_REG);
+                suffix = 0;
 
                 break;
 
@@ -283,7 +293,37 @@ void execute(uint8_t* memory, CPU* cpu) {
 
             case ADD_IMDT_REGMEM:
 
+                if(reg == 5) {
+                    sub_immidiate(cpu, memory, mod, ea, suffix, data, false);
+                    break;
+                }
+
                 add_immidiate(cpu, memory, mod, ea, suffix, data, reg == 2);
+
+                break;
+
+            case INC_REG:
+                mod = 3;
+                suffix |= WORD;
+                ea = memory[cpu->ip] & 0x07;
+
+            case INC_REGMEM:
+
+                inc(cpu, memory, mod, ea, suffix, 1); // can be used as decrement with passing direction -1
+                suffix = 0;
+
+                break;
+
+            case SUB_REGMEM_TO_REG:
+
+                sub(cpu, memory, reg, mod, ea, suffix, false);
+                suffix = 0;
+
+                break;
+
+            case SUB_IMDT_ACCUMUL:
+
+                sub_immidiate(cpu, memory, 3, 0, suffix, data, false);
 
                 break;
 

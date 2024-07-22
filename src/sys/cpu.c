@@ -32,7 +32,9 @@ void mov_immidiate(CPU* cpu, uint8_t mod, uint16_t ea, uint8_t suffix, uint8_t* 
     if(mod == 3) {
         setValue(cpu, ea, combineBytes(data_word[1], data_word[0]), suffix & WORD);
     } else {
-        memory[physicalToLogical(cpu->segments[DS], ea)] = combineBytes(data_word[1], data_word[0]);
+        memory[physicalToLogical(cpu->segments[DS], ea)] = data_word[0];
+        if(suffix & WORD)
+            memory[physicalToLogical(cpu->segments[DS], ea + 1)] = data_word[1];
     }
 }
 
@@ -87,7 +89,7 @@ void pop(CPU* cpu, uint8_t* memory, uint8_t mod, uint16_t ea) {
     cpu->_16bits[SP] += 2;
 }
 
-void xchg(CPU* cpu, uint8_t* memory, uint8_t reg, uint8_t mod, uint8_t ea, uint8_t suffix) {
+void xchg(CPU* cpu, uint8_t* memory, uint8_t reg, uint8_t mod, uint16_t ea, uint8_t suffix) {
     uint16_t temp;
     if(mod == 3) {
         if(suffix & WORD) {
@@ -114,11 +116,14 @@ void xchg(CPU* cpu, uint8_t* memory, uint8_t reg, uint8_t mod, uint8_t ea, uint8
     }
 }
 
-void add(CPU* cpu, uint8_t* memory, uint8_t reg, uint8_t mod, uint8_t ea, uint8_t suffix, uint8_t carry) {
+void add(CPU* cpu, uint8_t* memory, uint8_t reg, uint8_t mod, uint16_t ea, uint8_t suffix, uint8_t carry) {
     uint8_t c = carry?!!(cpu->flags & (1 << CF)):0;
     uint32_t sum = c + (suffix&WORD ? cpu->_16bits[reg] : cpu->_8bits[reg]) + memory[physicalToLogical(cpu->segments[DS], ea + (suffix & WORD))];
     if(sum > 0xFFFF) {
-        cpu->flags |= 1 << CF;
+        setFlag(cpu, CF);
+    }
+    if(!sum) {
+        setFlag(cpu, ZF);
     }
     if(mod == 3) { // ea as register
         if(suffix & DISP) { // "to" reg
@@ -138,7 +143,27 @@ void add(CPU* cpu, uint8_t* memory, uint8_t reg, uint8_t mod, uint8_t ea, uint8_
     }
 }
 
-void add_immidiate(CPU* cpu, uint8_t* memory, uint8_t mod, uint8_t ea, uint8_t suffix, uint8_t* data, uint8_t carry) {
+void sub(CPU* cpu, uint8_t* memory, uint8_t reg, uint8_t mod, uint16_t ea, uint8_t suffix, uint8_t carry) {
+    uint8_t c = carry?!!(cpu->flags & (1 << CF)):0;
+    if(mod == 3) { // ea as register
+        if(suffix & DISP) { // "to" reg
+            setValue(cpu, reg, ((suffix & WORD)?(cpu->_16bits[reg] - cpu->_16bits[ea]):(cpu->_8bits[reg]+cpu->_8bits[ea])) - c, suffix & WORD);
+        } else {
+            setValue(cpu, ea, ((suffix & WORD)?(cpu->_16bits[reg] - cpu->_16bits[ea]):(cpu->_8bits[reg] + cpu->_8bits[ea])) - c, suffix & WORD);
+        }
+    } else {
+        if(suffix & DISP) {
+            setValue(cpu, reg, (suffix&WORD?cpu->_16bits[reg]:cpu->_8bits[reg]) - combineBytes(memory[physicalToLogical(cpu->segments[DS], ea+1)] - c, 
+                memory[physicalToLogical(cpu->segments[DS], ea)]), suffix & WORD);
+        } else {
+            memory[physicalToLogical(cpu->segments[DS], ea)] -= (suffix&WORD?cpu->_16bits[reg]:cpu->_8bits[reg]) & 0x00FF - c;
+            if(suffix & WORD)
+                memory[physicalToLogical(cpu->segments[DS], ea + 1)] -= (cpu->_16bits[reg] & 0xFF00) >> 8;
+        }
+    }
+}
+
+void add_immidiate(CPU* cpu, uint8_t* memory, uint8_t mod, uint16_t ea, uint8_t suffix, uint8_t* data, uint8_t carry) {
     uint8_t c = carry?!!(cpu->flags & (1 << CF)):0;
     uint16_t r = combineBytes(data[1], data[0]);
     if(mod == 3) {
@@ -154,6 +179,57 @@ void add_immidiate(CPU* cpu, uint8_t* memory, uint8_t mod, uint8_t ea, uint8_t s
         if(suffix & WORD) {
             memory[physicalToLogical(cpu->segments[DS], ea + 1)] += (suffix&DISP?(int8_t)(r & 0xFF00) >> 8:(r & 0xFF00) >> 8);
         }
+    }
+}
+
+void sub_immidiate(CPU* cpu, uint8_t* memory, uint8_t mod, uint16_t ea, uint8_t suffix, uint8_t* data, uint8_t carry) {
+    uint8_t c = carry?!!(cpu->flags & (1 << CF)):0;
+    uint16_t r = combineBytes(data[1], data[0]);
+    if(mod == 3) {
+        if(suffix & WORD) {
+            setValue(cpu, ea, cpu->_16bits[ea] - (suffix & DISP?(int16_t)r:r) - c, true);
+            if(cpu->_16bits[ea] == 0) setFlag(cpu, ZF);
+        } else {
+            setValue(cpu, ea, cpu->_8bits[ea] - (suffix & DISP?(int8_t)r:r) - c, false);
+            if(cpu->_8bits[ea] == 0) setFlag(cpu, ZF);
+        }
+    } else {
+        if(suffix & WORD) {
+            memory[physicalToLogical(cpu->segments[DS], ea)] -= (suffix&DISP?(int8_t)r:r) - c;
+            memory[physicalToLogical(cpu->segments[DS], ea + 1)] -= (suffix&DISP?(int8_t)(r & 0xFF00) >> 8:(r & 0xFF00) >> 8)-c;
+            if(combineBytes(memory[physicalToLogical(cpu->segments[DS], ea + 1)], memory[physicalToLogical(cpu->segments[DS], ea)] == 0)) {
+                setFlag(cpu, ZF);
+            }
+        } else {
+            memory[physicalToLogical(cpu->segments[DS], ea)] -= (suffix&DISP?(int8_t)r:r) - c;
+        }
+    }
+}
+
+void inc(CPU* cpu, uint8_t* memory, uint8_t mod, uint16_t ea, uint8_t suffix, int8_t direction) {
+    if(mod == 3) {
+        if(suffix & WORD) {
+            if(cpu->_16bits[ea] == 0xFFFF) cpu->flags |= 1 << CF;
+            setValue(cpu, ea, cpu->_16bits[ea] + direction, true);
+        } else {
+            if(cpu->_8bits[ea] == 0xFF) cpu->flags |= 1 << CF;
+            setValue(cpu, ea, cpu->_8bits[ea] + direction, false);
+        }
+    } else {
+        if(memory[physicalToLogical(cpu->segments[DS], ea)] == 0xFF && direction == 1) {
+            memory[physicalToLogical(cpu->segments[DS], ea)] = 0x00;
+            if(!(suffix & WORD)) {
+                setFlag(cpu, ZF);
+                setFlag(cpu, CF);
+            }
+            if(suffix & WORD && memory[physicalToLogical(cpu->segments[DS], ea + 1)] == 0xFF) {
+                memory[physicalToLogical(cpu->segments[DS], ea + 1)] = 0;
+                setFlag(cpu, CF);
+                setFlag(cpu, ZF);
+            } else 
+                memory[physicalToLogical(cpu->segments[DS], ea + 1)] += 1;
+        }
+        memory[physicalToLogical(cpu->segments[DS], ea)] += direction;
     }
 }
 
@@ -178,4 +254,16 @@ void setValue(CPU* cpu, uint8_t reg, uint16_t value, bool w) {
 
         cpu->_16bits[reg-4] = total;
     }
+}
+
+void setFlag(CPU* cpu, int flag) {
+    cpu->flags |= 1 << flag;
+}
+
+void clrFlag(CPU* cpu, int flag) {
+    cpu->flags &= ~(1 << flag);
+}
+
+void invFlag(CPU* cpu, int flag) {
+    cpu->flags ^= 1 << flag;
 }

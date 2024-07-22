@@ -38,6 +38,14 @@ typedef enum {
     ADC_IMDT_REGMEM =       0b10000000, // Add immidiate to register/memory carry
     ADC_IMDT_ACCUMUL =      0b00010100, // Add immidiate to accumulator carry
 
+    // INC
+    INC_REGMEM =            0b11111110, // Increment register/memory
+    INC_REG =               0b01000000, // Increment register.
+
+    SUB_REGMEM_TO_REG =     0b00101000, // Sub register/memory with register either
+    SUB_IMDT_REGMEM =       0b10000000, // Sub immidiate from register/memory
+    SUB_IMDT_ACCUMUL =      0b00101100, // Sub immidiate from accumulator
+
     // INT
     INT_TYPESPEC =          0b11001101, // Type specified
 
@@ -51,6 +59,10 @@ typedef enum {
     XCHG,
     ADD,
     ADC,
+    INC,
+    SUB,
+    SBB,
+    DEC,
 
     NONE
 } Type;

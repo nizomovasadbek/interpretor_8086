@@ -61,6 +61,9 @@ typedef struct {
 CPU cpu_init(void);
 
 void setValue(CPU* cpu, uint8_t reg, uint16_t value, bool w);
+void setFlag(CPU* cpu, int flag);
+void clrFlag(CPU* cpu, int flag);
+void invFlag(CPU* cpu, int flag);
 /*
     set register to the desired value
     uses 16bit registers if w is true
@@ -73,8 +76,11 @@ void mov_segment(CPU* cpu, uint8_t mod, uint8_t sreg, uint16_t ea, uint8_t suffi
 
 void push(CPU* cpu, uint8_t* memory, uint8_t mod, uint16_t ea);
 void pop(CPU* cpu, uint8_t* memory, uint8_t mod, uint16_t ea);
-void xchg(CPU* cpu, uint8_t* memory, uint8_t reg, uint8_t mod, uint8_t ea, uint8_t suffix);
-void add(CPU* cpu, uint8_t* memory, uint8_t reg, uint8_t mod, uint8_t ea, uint8_t suffix, uint8_t carry);
-void add_immidiate(CPU* cpu, uint8_t* memory, uint8_t mod, uint8_t ea, uint8_t suffix, uint8_t* data, uint8_t carry);
+void xchg(CPU* cpu, uint8_t* memory, uint8_t reg, uint8_t mod, uint16_t ea, uint8_t suffix);
+void add(CPU* cpu, uint8_t* memory, uint8_t reg, uint8_t mod, uint16_t ea, uint8_t suffix, uint8_t carry);
+void sub(CPU* cpu, uint8_t* memory, uint8_t reg, uint8_t mod, uint16_t ea, uint8_t suffix, uint8_t carry);
+void add_immidiate(CPU* cpu, uint8_t* memory, uint8_t mod, uint16_t ea, uint8_t suffix, uint8_t* data, uint8_t carry);
+void sub_immidiate(CPU* cpu, uint8_t* memory, uint8_t mod, uint16_t ea, uint8_t suffix, uint8_t* data, uint8_t carry);
+void inc(CPU* cpu, uint8_t* memory, uint8_t mod, uint16_t ea, uint8_t suffix, int8_t direction);
 
 #endif
