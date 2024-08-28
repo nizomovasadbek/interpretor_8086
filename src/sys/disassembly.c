@@ -57,9 +57,12 @@ IST table[] = {
     { SSB_IMDT_ACCUMUL, 7, SSB, 2, .config = WORD | DATA_WORD }, // -
 
     // DEC
-    { DEC_REG, 5, DEC, .config = REGISTER }, // -
+    { DEC_REG, 5, DEC, 1, .config = REGISTER }, // -
 
-    
+    //JMP
+    { JMP_WITHIN_SGMT, 8, JMP, 3, .config = DATA_WORD }, //
+
+    // INT    
     { INT_TYPESPEC, 8, INT, 2, .config = DATA_WORD }, // -
 };
 
@@ -357,6 +360,12 @@ void execute(uint8_t* memory, CPU* cpu) {
 
                 reg = memory[cpu->ip] & 0x07;
                 inc(cpu, memory, 3, reg, WORD, -1);
+
+                break;
+
+            case JMP_WITHIN_SGMT:
+
+                
 
                 break;
 

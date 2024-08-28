@@ -55,6 +55,9 @@ typedef enum {
     // DEC
     DEC_REG =               0b01001000, // Decrement register
 
+    //JMP
+    JMP_WITHIN_SGMT =       0b11101001, // Jump direct within segment (short jump)
+
     // INT
     INT_TYPESPEC =          0b11001101, // Type specified
 
@@ -72,6 +75,7 @@ typedef enum {
     SUB,
     SSB,
     DEC,
+    JMP,
 
     NONE
 } Type;
